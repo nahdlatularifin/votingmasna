@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Voting Pemilihan Raya - MA Nahdlatul Arifin</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              800: '#065f46',
+              900: '#064e3b',
+            },
+            accent: {
+              500: '#f59e0b',
+              600: '#d97706',
+            }
+          },
+          boxShadow: {
+            'glow-emerald': '0 0 25px -5px rgba(16, 185, 129, 0.3)',
+            'glow-card': '0 20px 40px -15px rgba(0, 0, 0, 0.07)',
+            'modern-input': '0 4px 20px -2px rgba(16, 185, 129, 0.15)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0f172a;
+    }
+    
+    /* Dynamic Mesh Background Animation */
+    .mesh-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      background: radial-gradient(circle at 15% 15%, rgba(5, 150, 105, 0.15) 0%, transparent 45%),
+                  radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+                  radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 1) 0%, #090d16 100%);
+    }
+
+    /* Ambient Animated Orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.5;
+      animation: floatOrb 20s infinite ease-in-out alternate;
+    }
+    .orb-1 { top: 10%; left: 20%; width: 300px; height: 300px; background: #059669; }
+    .orb-2 { bottom: 15%; right: 15%; width: 350px; height: 350px; background: #047857; animation-delay: -7s; }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(40px, -30px) scale(1.1); }
+      100% { transform: translate(-30px, 40px) scale(0.95); }
+    }
+
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+    }
+
+    .glass-header {
+      background: rgba(6, 78, 59, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Modern Animations */
+    .animate-screen-entry {
+      animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .shimmer {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Ultra Modern Input Fields Styling */
+    .input-modern {
+      background: rgba(248, 250, 252, 0.9);
+      border: 1.5px solid #cbd5e1;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .input-modern:focus {
+      background: #ffffff;
+      border-color: #059669;
+      box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15), 0 8px 20px -6px rgba(5, 150, 105, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Custom Input Wrapper Glow Effects */
+    .form-group-modern {
+      position: relative;
+    }
+    .form-group-modern:focus-within label {
+      color: #059669;
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white relative">
+
+  <!-- Ambient Background Canvas -->
+  <div class="mesh-background">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <!-- TOP BAR / HEADER -->
+  <header class="glass-header text-white shadow-xl sticky top-0 z-40 border-b border-brand-800/50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div class="flex items-center space-x-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-500 to-emerald-300 text-brand-900 flex items-center justify-center font-black text-2xl shadow-lg shadow-brand-500/30 transform hover:scale-105 transition-transform duration-200">
+          <i class="fa-solid fa-check-to-slot"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-black text-xl sm:text-2xl tracking-tight text-white leading-none">E-VOTING PEMIRA</h1>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> LIVE
+            </span>
+          </div>
+          <p class="text-xs text-brand-200 font-semibold tracking-wide mt-1">MA NAHDLATUL ARIFIN</p>
+        </div>
+      </div>
+
+      <!-- User Info & Logout Button -->
+      <div id="userHeaderBar" class="hidden flex items-center space-x-4">
+        <div class="text-right hidden sm:block">
+          <p id="headerUserName" class="text-sm font-bold text-white leading-none"></p>
+          <span id="headerUserRole" class="text-[10px] font-bold tracking-wider bg-brand-900/80 text-brand-200 px-2.5 py-0.5 rounded-full border border-brand-600/50 uppercase"></span>
+        </div>
+        <button id="btnLogoutHeader" onclick="logout()" class="bg-red-500/90 hover:bg-red-600 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all duration-200 flex items-center gap-2 shadow-lg shadow-red-500/20 active:scale-95 border border-red-400/30">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Keluar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+
+    <!-- 1. LOGIN SCREEN -->
+    <section id="loginScreen" class="max-w-md mx-auto my-6 animate-screen-entry">
+      <div class="glass-panel rounded-3xl shadow-glow-card p-8 sm:p-10 border border-white/60 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-500 via-emerald-400 to-teal-500"></div>
+
+        <div class="text-center mb-8">
+          <div class="w-20 h-20 bg-gradient-to-br from-brand-50 to-brand-100 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-brand-200 shadow-inner group transform hover:rotate-6 transition-transform duration-300">
+            <i class="fa-solid fa-graduation-cap text-3xl text-brand-700"></i>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Selamat Datang</h2>
+          <p class="text-xs sm:text-sm text-slate-500 mt-1.5 font-medium">Masuk menggunakan ID DPT (NIS/NIP) & Password Anda</p>
+        </div>
+
+        <form onsubmit="handleLogin(event)" class="space-y-5">
+          <div class="form-group-modern">
+            <label class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-2 transition-colors">Username / NIS / NIP</label>
+            <div class="relative group">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-brand-600 transition-colors">
+                <i class="fa-solid fa-user text-sm"></i>
+              </span>
+              <input type="text" id="loginUsername" required placeholder="Masukkan Username / ID DPT" class="input-modern w-full pl-11 pr-4 py-3.5 rounded-2xl text-slate-800 text-sm font-semibold focus:outline-none">
+            </div>
+          </div>
+
+          <div class="form-group-modern">
+            <label class="block text-xs font-extrabold text-slate-600 uppercase tracking-wider mb-2 transition-colors">Password</label>
+            <div class="relative group">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 group-focus-within:text-brand-600 transition-colors">
+                <i class="fa-solid fa-lock text-sm"></i>
+              </span>
+              <input type="password" id="loginPassword" required placeholder="Masukkan Password" class="input-modern w-full pl-11 pr-11 py-3.5 rounded-2xl text-slate-800 text-sm font-semibold focus:outline-none">
+              <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors">
+                <i id="togglePassIcon" class="fa-solid fa-eye text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" id="btnLogin" class="w-full bg-gradient-to-r from-brand-700 via-brand-600 to-emerald-600 hover:from-brand-800 hover:to-emerald-700 text-white font-extrabold py-4 rounded-2xl shadow-lg shadow-brand-700/25 hover:shadow-xl hover:shadow-brand-700/35 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2.5 text-sm tracking-wide mt-2">
+            <span>Masuk & Mulai Memilih</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-100 text-center text-xs font-semibold text-slate-400">
+          <p>MA Nahdlatul Arifin E-Voting System &copy; 2026</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. VOTER WIZARD SCREEN -->
+    <section id="votingWizardScreen" class="hidden space-y-6 animate-screen-entry">
+      <div class="glass-panel rounded-3xl p-6 sm:p-8 shadow-glow-card border border-white/60">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+          <div>
+            <span id="wizardStepBadge" class="inline-flex items-center gap-1.5 bg-brand-100 text-brand-800 text-xs font-extrabold px-3.5 py-1 rounded-full uppercase tracking-wider border border-brand-200">
+              <i class="fa-solid fa-layer-group text-[10px]"></i> Kategori 1 dari 1
+            </span>
+            <h2 id="wizardCategoryTitle" class="text-2xl sm:text-3xl font-black text-slate-800 mt-2 tracking-tight">Nama Organisasi</h2>
+          </div>
+          <div class="sm:text-right bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-xl border sm:border-none border-slate-200">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Status Hak Pilih Anda:</span>
+            <p id="wizardSelectionStatus" class="text-sm font-extrabold text-amber-600 flex items-center sm:justify-end gap-1.5 mt-0.5">
+              <i class="fa-solid fa-circle-exclamation"></i> Belum Memilih
+            </p>
+          </div>
+        </div>
+
+        <div class="w-full bg-slate-100 rounded-full h-3.5 p-0.5 overflow-hidden border border-slate-200/60">
+          <div id="wizardProgressBar" class="bg-gradient-to-r from-brand-600 to-emerald-400 h-2.5 rounded-full transition-all duration-500 ease-out shadow-sm" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div id="candidateCardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="glass-panel rounded-3xl p-5 shadow-sm border shimmer h-96"></div>
+        <div class="glass-panel rounded-3xl p-5 shadow-sm border shimmer h-96"></div>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-4 shadow-xl border border-white/80 flex items-center justify-between sticky bottom-6 z-30">
+        <button id="btnPrevCategory" onclick="prevCategory()" class="px-6 py-3 rounded-xl border-2 border-slate-200 hover:border-slate-300 bg-white text-slate-700 hover:bg-slate-50 font-bold text-sm transition-all duration-200 flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none active:scale-95 shadow-sm">
+          <i class="fa-solid fa-chevron-left"></i>
+          <span>Sebelumnya</span>
+        </button>
+
+        <button id="btnNextCategory" onclick="nextCategory()" class="px-7 py-3 rounded-xl bg-gradient-to-r from-brand-700 to-emerald-600 hover:from-brand-800 hover:to-emerald-700 text-white font-extrabold text-sm transition-all duration-200 shadow-lg shadow-brand-700/25 active:scale-95 flex items-center gap-2">
+          <span>Organisasi Berikutnya</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. VOTER THANK YOU SCREEN -->
+    <section id="thankYouScreen" class="hidden max-w-lg mx-auto text-center py-8 animate-screen-entry">
+      <div class="glass-panel rounded-3xl p-8 sm:p-10 shadow-glow-card border border-white/60 space-y-6">
+        <div class="w-24 h-24 bg-gradient-to-tr from-brand-500 to-emerald-300 text-white rounded-full flex items-center justify-center mx-auto text-4xl shadow-xl shadow-brand-500/30 border-4 border-white transform hover:scale-110 transition-transform duration-300">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <div class="space-y-2">
+          <h2 class="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">Suara Anda Terekam!</h2>
+          <p class="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">Terima kasih telah berpartisipasi dalam Pemilihan Raya MA Nahdlatul Arifin. Hak suara Anda tersimpan secara <strong>Rahasia, Adil, & Transparan</strong>.</p>
+        </div>
+        
+        <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 text-left text-xs text-slate-600 space-y-2.5 shadow-inner">
+          <p class="font-extrabold text-slate-800 border-b border-slate-200 pb-2 uppercase tracking-wider text-[11px] flex items-center gap-2">
+            <i class="fa-solid fa-receipt text-brand-600"></i> Bukti Partisipasi Digital
+          </p>
+          <div class="flex justify-between items-center py-1">
+            <span class="text-slate-400 font-medium">Nama Pemilih:</span>
+            <span id="tyNama" class="font-bold text-slate-800 text-sm"></span>
+          </div>
+          <div class="flex justify-between items-center py-1 border-t border-slate-100">
+            <span class="text-slate-400 font-medium">Status DPT:</span>
+            <span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full font-extrabold text-[10px] uppercase">SUDAH MEMILIH</span>
+          </div>
+          <div class="flex justify-between items-center py-1 border-t border-slate-100">
+            <span class="text-slate-400 font-medium">Waktu Presensi:</span>
+            <span id="tyTime" class="font-mono text-slate-700 font-semibold"></span>
+          </div>
+        </div>
+
+        <button onclick="logout()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-4 rounded-2xl text-sm font-extrabold transition-all duration-200 shadow-xl active:scale-95">
+          Selesai & Keluar Aplikasi
+        </button>
+      </div>
+    </section>
+
+    <!-- 4. ADMIN DASHBOARD SCREEN -->
+    <section id="adminDashboardScreen" class="hidden space-y-6 animate-screen-entry">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="glass-panel rounded-2xl p-5 shadow-sm border border-white/60 hover:shadow-md transition-shadow">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Total DPT</p>
+              <h3 id="statTotalDPT" class="text-3xl font-black text-slate-800 mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg shadow-inner">
+              <i class="fa-solid fa-users"></i>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-3"><span id="statGuruCount" class="text-slate-700">0</span> Guru | <span id="statSiswaCount" class="text-slate-700">0</span> Siswa</p>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-5 shadow-sm border border-white/60 hover:shadow-md transition-shadow">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Sudah Memilih</p>
+              <h3 id="statSudahMemilih" class="text-3xl font-black text-emerald-600 mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg shadow-inner">
+              <i class="fa-solid fa-user-check"></i>
+            </div>
+          </div>
+          <p id="statPersentase" class="text-xs font-extrabold text-emerald-600 mt-3">0% Partisipasi</p>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-5 shadow-sm border border-white/60 hover:shadow-md transition-shadow">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Belum Memilih</p>
+              <h3 id="statBelumMemilih" class="text-3xl font-black text-amber-600 mt-1">0</h3>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg shadow-inner">
+              <i class="fa-solid fa-user-clock"></i>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 font-semibold mt-3">Menunggu Hak Pilih</p>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-5 shadow-sm border border-white/60 flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div>
+            <p class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">Laporan Resmi</p>
+            <p class="text-xs text-slate-600 font-bold mt-1">Cetak PDF Berita Acara</p>
+          </div>
+          <button id="btnExportPDF" onclick="exportRekapPDF()" class="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs py-3 rounded-xl font-extrabold transition-all duration-200 flex items-center justify-center gap-2 shadow-md active:scale-95">
+            <i class="fa-solid fa-file-pdf text-red-400"></i>
+            <span>Download PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-panel rounded-3xl shadow-glow-card border border-white/60 overflow-hidden">
+        <div class="flex border-b border-slate-200/80 bg-slate-50/70 overflow-x-auto">
+          <button onclick="switchAdminTab('hasil')" id="tabBtnHasil" class="px-6 py-4 text-xs font-extrabold border-b-2 border-brand-700 text-brand-700 whitespace-nowrap transition-all">
+            <i class="fa-solid fa-chart-pie me-2"></i>Hasil Suara Realtime
+          </button>
+          <button onclick="switchAdminTab('dpt')" id="tabBtnDPT" class="px-6 py-4 text-xs font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap transition-all">
+            <i class="fa-solid fa-address-book me-2"></i>Daftar DPT & Guru
+          </button>
+          <button onclick="switchAdminTab('paslon')" id="tabBtnPaslon" class="px-6 py-4 text-xs font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap transition-all">
+            <i class="fa-solid fa-user-tie me-2"></i>Kelola Paslon
+          </button>
+          <button onclick="switchAdminTab('kategori')" id="tabBtnKategori" class="px-6 py-4 text-xs font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap transition-all">
+            <i class="fa-solid fa-sitemap me-2"></i>Kelola Organisasi
+          </button>
+        </div>
+
+        <div id="adminTabHasil" class="p-6 sm:p-8 space-y-8">
+          <div id="chartsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+        </div>
+
+        <div id="adminTabDPT" class="hidden p-6 sm:p-8 space-y-5">
+          <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+              <input type="text" id="searchDPTInput" onkeyup="filterDPTTable()" placeholder="Cari nama / NIS / NIP..." class="input-modern text-xs px-4 py-2.5 rounded-xl text-slate-800 w-full sm:w-64 font-semibold outline-none">
+              <select id="filterRoleDPT" onchange="filterDPTTable()" class="input-modern text-xs px-3.5 py-2.5 rounded-xl text-slate-800 font-semibold outline-none cursor-pointer">
+                <option value="all">Semua Role</option>
+                <option value="guru">Guru</option>
+                <option value="siswa">Siswa</option>
+              </select>
+              <select id="filterStatusDPT" onchange="filterDPTTable()" class="input-modern text-xs px-3.5 py-2.5 rounded-xl text-slate-800 font-semibold outline-none cursor-pointer">
+                <option value="all">Semua Status</option>
+                <option value="Sudah">Sudah Memilih</option>
+                <option value="Belum">Belum Memilih</option>
+              </select>
+            </div>
+            <button onclick="openModalAddDPT()" class="bg-brand-700 hover:bg-brand-800 text-white text-xs px-5 py-3 rounded-xl font-extrabold transition-all shadow-md active:scale-95 flex items-center gap-2 w-full sm:w-auto justify-center">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Tambah DPT</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-700 uppercase font-extrabold border-b border-slate-200 tracking-wider text-[11px]">
+                <tr>
+                  <th class="px-5 py-3.5">No</th>
+                  <th class="px-5 py-3.5">Username / NIS</th>
+                  <th class="px-5 py-3.5">Nama Lengkap</th>
+                  <th class="px-5 py-3.5">Role</th>
+                  <th class="px-5 py-3.5">Status Memilih</th>
+                  <th class="px-5 py-3.5 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="dptTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="adminTabPaslon" class="hidden p-6 sm:p-8 space-y-5">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-slate-800 text-base">Daftar Paslon / Kandidat</h3>
+            <button onclick="openModalCandidate()" class="bg-brand-700 hover:bg-brand-800 text-white text-xs px-4 py-2.5 rounded-xl font-extrabold shadow-sm transition-all flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>Tambah Paslon</span>
+            </button>
+          </div>
+          <div id="adminCandidatesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        </div>
+
+        <div id="adminTabKategori" class="hidden p-6 sm:p-8 space-y-5">
+          <div class="flex justify-between items-center">
+            <h3 class="font-extrabold text-slate-800 text-base">Kategori Organisasi</h3>
+            <button onclick="openModalCategory()" class="bg-brand-700 hover:bg-brand-800 text-white text-xs px-4 py-2.5 rounded-xl font-extrabold shadow-sm transition-all flex items-center gap-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>Tambah Organisasi</span>
+            </button>
+          </div>
+          <div id="adminCategoryList" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HIDDEN PDF REPORT TEMPLATE -->
+    <div class="hidden">
+      <div id="pdfReportTemplate" class="p-8 bg-white text-slate-900 space-y-6">
+        <div class="text-center border-b-2 border-slate-800 pb-4">
+          <h2 class="text-xl font-black uppercase tracking-wider">MA NAHDLATUL ARIFIN</h2>
+          <h3 class="text-lg font-bold text-emerald-800">BERITA ACARA REKAPITULASI PEMILIHAN RAYA</h3>
+          <p class="text-xs text-slate-500">Sistem E-Voting Terintegrasi | Tanggal: <span id="pdfDate"></span></p>
+        </div>
+
+        <div class="space-y-2">
+          <h4 class="font-bold text-sm border-b pb-1">I. Ringkasan DPT (Daftar Pemilih Tetap)</h4>
+          <table class="w-full text-xs border-collapse border border-slate-300">
+            <tr class="bg-slate-100"><td class="border border-slate-300 p-2 font-semibold">Total Hak Pilih (DPT)</td><td id="pdfTotalDPT" class="border border-slate-300 p-2 font-bold">0</td></tr>
+            <tr><td class="border border-slate-300 p-2">Jumlah Guru</td><td id="pdfTotalGuru" class="border border-slate-300 p-2">0</td></tr>
+            <tr><td class="border border-slate-300 p-2">Jumlah Siswa</td><td id="pdfTotalSiswa" class="border border-slate-300 p-2">0</td></tr>
+            <tr class="bg-emerald-50"><td class="border border-slate-300 p-2 font-semibold">Suara Masuk (Memilih)</td><td id="pdfSudahMemilih" class="border border-slate-300 p-2 font-bold text-emerald-700">0</td></tr>
+            <tr class="bg-amber-50"><td class="border border-slate-300 p-2 font-semibold">Tidak Memilih (Golput)</td><td id="pdfBelumMemilih" class="border border-slate-300 p-2 font-bold text-amber-700">0</td></tr>
+          </table>
+        </div>
+
+        <div class="space-y-4">
+          <h4 class="font-bold text-sm border-b pb-1">II. Perolehan Suara Per Organisasi</h4>
+          <div id="pdfPerolehanSuara" class="space-y-4"></div>
+        </div>
+
+        <div class="pt-12 flex justify-between text-xs text-center">
+          <div>
+            <p>Ketua Panitia PEMIRA</p>
+            <div class="h-16"></div>
+            <p class="font-bold underline">(........................................)</p>
+          </div>
+          <div>
+            <p>Kepala MA Nahdlatul Arifin</p>
+            <div class="h-16"></div>
+            <p class="font-bold underline">(........................................)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL PREVIEW VISI MISI -->
+  <div id="visiMisiModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md hidden z-50 flex items-center justify-center p-4 animate-screen-entry">
+    <div class="glass-panel rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-5 border border-white/60">
+      <div class="flex justify-between items-center border-b border-slate-200 pb-4">
+        <h3 id="modalVisiMisiTitle" class="font-black text-slate-800 text-xl tracking-tight">Visi & Misi</h3>
+        <button onclick="closeVisiMisiModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-colors">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div id="modalVisiMisiContent" class="text-sm text-slate-600 font-medium whitespace-pre-line leading-relaxed max-h-80 overflow-y-auto pr-2"></div>
+      <button onclick="closeVisiMisiModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-2xl font-extrabold text-xs tracking-wider uppercase transition-all">Tutup Modal</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // --- GOOGLE APPS SCRIPT WEB APP URL ---
+    const API_URL = "https://script.google.com/macros/s/AKfycby7Ddok14xdlvXrvMRZxKN640cKFQi0whwJ-73SrYqsViguGtNp8SJza4_mhwkkCTWJ1w/exec";
+
+    // --- GLOBAL STATE ---
+    let currentUser = null;
+    let categories = [];
+    let candidates = [];
+    let dptList = [];
+    let currentCategoryIndex = 0;
+    let userVotes = {};
+    let chartInstances = {};
+
+    // --- INITIALIZATION ---
+    document.addEventListener('DOMContentLoaded', () => {
+      checkSavedSession();
+    });
+
+    function checkSavedSession() {
+      const session = localStorage.getItem('evoting_user');
+      if (session) {
+        currentUser = JSON.parse(session);
+        updateHeaderUser();
+        if (currentUser.role === 'admin') {
+          showScreen('adminDashboardScreen');
+          loadAdminDashboard();
+        } else if (currentUser.status_memilih === 'Sudah') {
+          showThankYouScreen();
+        } else {
+          showScreen('votingWizardScreen');
+          loadInitialVotingData();
+        }
+      } else {
+        showScreen('loginScreen');
+      }
+    }
+
+    function showScreen(screenId) {
+      ['loginScreen', 'votingWizardScreen', 'thankYouScreen', 'adminDashboardScreen'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function updateHeaderUser() {
+      if (currentUser) {
+        document.getElementById('userHeaderBar').classList.remove('hidden');
+        document.getElementById('headerUserName').innerText = currentUser.nama;
+        document.getElementById('headerUserRole').innerText = currentUser.role.toUpperCase();
+      } else {
+        document.getElementById('userHeaderBar').classList.add('hidden');
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const passInput = document.getElementById('loginPassword');
+      const icon = document.getElementById('togglePassIcon');
+      if (passInput.type === 'password') {
+        passInput.type = 'text';
+        icon.className = 'fa-solid fa-eye-slash text-sm text-brand-600';
+      } else {
+        passInput.type = 'password';
+        icon.className = 'fa-solid fa-eye text-sm text-slate-400';
+      }
+    }
+
+    // --- LOGIN LOGIC ---
+    async function handleLogin(e) {
+      e.preventDefault();
+      if (!API_URL || API_URL === "MASUKKAN_URL_APPS_SCRIPT_DI_SINI") {
+        return Swal.fire('Perhatian', 'URL Apps Script belum dipasang dengan benar!', 'warning');
+      }
+
+      const usernameInput = document.getElementById('loginUsername');
+      const passwordInput = document.getElementById('loginPassword');
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+      const btn = document.getElementById('btnLogin');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-base me-2"></i> Memeriksa Akses...`;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'login', username, password })
+        });
+        const json = await res.json();
+
+        if (json.status === 'success') {
+          currentUser = json.user;
+          localStorage.setItem('evoting_user', JSON.stringify(currentUser));
+          updateHeaderUser();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Login Berhasil',
+            text: `Selamat datang, ${currentUser.nama}`,
+            timer: 1500,
+            showConfirmButton: false
+          });
+
+          if (currentUser.role === 'admin') {
+            showScreen('adminDashboardScreen');
+            loadAdminDashboard();
+          } else if (currentUser.status_memilih === 'Sudah') {
+            showThankYouScreen();
+          } else {
+            showScreen('votingWizardScreen');
+            loadInitialVotingData();
+          }
+        } else {
+          Swal.fire('Login Gagal', json.message || 'Username/Password salah', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error Network', 'Gagal terhubung ke server Google Sheets.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Masuk & Mulai Memilih</span> <i class="fa-solid fa-arrow-right"></i>`;
+      }
+    }
+
+    // --- LOGOUT LOGIC ---
+    function logout() {
+      const btn = document.getElementById('btnLogoutHeader');
+      if (btn) btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>Keluar...</span>`;
+
+      setTimeout(() => {
+        localStorage.removeItem('evoting_user');
+        currentUser = null;
+        userVotes = {};
+        currentCategoryIndex = 0;
+        
+        const uInput = document.getElementById('loginUsername');
+        const pInput = document.getElementById('loginPassword');
+        if (uInput) uInput.value = '';
+        if (pInput) pInput.value = '';
+
+        if (btn) btn.innerHTML = `<i class="fa-solid fa-right-from-bracket"></i><span>Keluar</span>`;
+        updateHeaderUser();
+        showScreen('loginScreen');
+      }, 300);
+    }
+
+    // --- VOTER WIZARD LOGIC ---
+    async function loadInitialVotingData() {
+      try {
+        const res = await fetch(`${API_URL}?action=getInitialData`);
+        const json = await res.json();
+        if (json.status === 'success') {
+          categories = json.categories;
+          candidates = json.candidates;
+          currentCategoryIndex = 0;
+          renderCategoryStep();
+        }
+      } catch (err) {
+        Swal.fire('Error Data', 'Gagal memuat data kandidat.', 'error');
+      }
+    }
+
+    function renderCategoryStep() {
+      if (categories.length === 0) return;
+      const cat = categories[currentCategoryIndex];
+      
+      document.getElementById('wizardStepBadge').innerHTML = `<i class="fa-solid fa-layer-group text-[10px]"></i> Kategori ${currentCategoryIndex + 1} dari ${categories.length}`;
+      document.getElementById('wizardCategoryTitle').innerText = cat.nama_organisasi;
+      const progressPercent = ((currentCategoryIndex + 1) / categories.length) * 100;
+      document.getElementById('wizardProgressBar').style.width = `${progressPercent}%`;
+
+      const selectedKandidatId = userVotes[cat.id_kategori];
+      const statusEl = document.getElementById('wizardSelectionStatus');
+      if (selectedKandidatId) {
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i> Paslon Dipilih`;
+        statusEl.className = "text-sm font-extrabold text-emerald-600 flex items-center sm:justify-end gap-1.5 mt-0.5";
+      } else {
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Belum Memilih`;
+        statusEl.className = "text-sm font-extrabold text-amber-600 flex items-center sm:justify-end gap-1.5 mt-0.5";
+      }
+
+      const catCandidates = candidates.filter(c => c.id_kategori === cat.id_kategori);
+      const grid = document.getElementById('candidateCardsGrid');
+      grid.innerHTML = '';
+
+      catCandidates.forEach(c => {
+        const isSelected = selectedKandidatId === c.id_kandidat;
+        const card = document.createElement('div');
+        card.className = `glass-panel rounded-3xl p-6 shadow-lg border-2 transition-all duration-300 relative flex flex-col justify-between transform hover:-translate-y-1 ${isSelected ? 'border-brand-600 ring-4 ring-brand-500/20 bg-emerald-50/40 shadow-glow-emerald' : 'border-white/80 hover:border-brand-300'}`;
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="bg-gradient-to-r from-brand-700 to-emerald-600 text-white font-black text-sm px-3 py-1 rounded-xl shadow-md">
+                NO. 0${c.no_urut}
+              </span>
+              ${isSelected ? '<span class="bg-emerald-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm"><i class="fa-solid fa-check"></i> Dipilih</span>' : ''}
+            </div>
+            <div class="overflow-hidden rounded-2xl mb-4 bg-slate-100 shadow-inner group">
+              <img src="${c.foto_url}" alt="${c.nama_calon}" class="w-full h-64 object-cover object-top group-hover:scale-105 transition-transform duration-500">
+            </div>
+            <h3 class="font-extrabold text-slate-800 text-lg leading-snug tracking-tight">${c.nama_calon}</h3>
+          </div>
+          <div class="mt-5 space-y-2.5">
+            <button onclick="showVisiMisi('${c.nama_calon.replace(/'/g, "\\'")}', '${c.visi_misi.replace(/'/g, "\\'")}')" class="w-full text-xs text-brand-700 font-bold py-2.5 bg-brand-50 hover:bg-brand-100/80 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 border border-brand-200/60">
+              <i class="fa-solid fa-eye"></i> Lihat Visi & Misi
+            </button>
+            <button onclick="selectCandidate('${cat.id_kategori}', '${c.id_kandidat}')" class="w-full py-3.5 rounded-xl font-extrabold text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${isSelected ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/30' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 active:scale-95'}">
+              <i class="fa-solid ${isSelected ? 'fa-circle-check' : 'fa-check'}"></i>
+              <span>${isSelected ? 'PASLON DIPILIH' : 'PILIH KANDIDAT'}</span>
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+
+      document.getElementById('btnPrevCategory').disabled = currentCategoryIndex === 0;
+      const nextBtn = document.getElementById('btnNextCategory');
+      if (currentCategoryIndex === categories.length - 1) {
+        nextBtn.innerHTML = `<span>SUBMIT & KUNCI SUARA</span> <i class="fa-solid fa-paper-plane"></i>`;
+        nextBtn.className = "px-7 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white font-extrabold text-sm transition-all shadow-lg shadow-amber-600/30 active:scale-95 flex items-center gap-2";
+      } else {
+        nextBtn.innerHTML = `<span>Organisasi Berikutnya</span> <i class="fa-solid fa-chevron-right"></i>`;
+        nextBtn.className = "px-7 py-3 rounded-xl bg-gradient-to-r from-brand-700 to-emerald-600 hover:from-brand-800 hover:to-emerald-700 text-white font-extrabold text-sm transition-all shadow-lg shadow-brand-700/25 active:scale-95 flex items-center gap-2";
+      }
+    }
+
+    function selectCandidate(idKategori, idKandidat) {
+      userVotes[idKategori] = idKandidat;
+      renderCategoryStep();
+    }
+
+    function prevCategory() {
+      if (currentCategoryIndex > 0) {
+        currentCategoryIndex--;
+        renderCategoryStep();
+      }
+    }
+
+    function nextCategory() {
+      const currentCat = categories[currentCategoryIndex];
+      if (!userVotes[currentCat.id_kategori]) {
+        return Swal.fire('Pilihan Kosong', 'Anda harus memilih kandidat di kategori ini sebelum melanjutkan!', 'warning');
+      }
+
+      if (currentCategoryIndex < categories.length - 1) {
+        currentCategoryIndex++;
+        renderCategoryStep();
+      } else {
+        Swal.fire({
+          title: 'Kunci & Kirim Hak Suara?',
+          text: 'Pilihan suara Anda akan disimpan secara permanen dan tidak dapat diubah.',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#059669',
+          cancelButtonColor: '#64748b',
+          confirmButtonText: '<i class="fa-solid fa-paper-plane me-1"></i> Ya, Kirim Suara Saya!',
+          cancelButtonText: 'Periksa Kembali'
+        }).then((result) => {
+          if (result.isConfirmed) submitAllVotes();
+        });
+      }
+    }
+
+    async function submitAllVotes() {
+      const votesArray = Object.keys(userVotes).map(catId => ({
+        id_kategori: catId,
+        id_kandidat: userVotes[catId]
+      }));
+
+      const nextBtn = document.getElementById('btnNextCategory');
+      if (nextBtn) {
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>Mengirim Suara...</span>`;
+      }
+
+      Swal.fire({
+        title: 'Mencatat Hak Suara...',
+        text: 'Mohon tunggu sebentar, sistem sedang mengunci suara Anda.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'submitVote',
+            username: currentUser.username,
+            votes: votesArray
+          })
+        });
+        const json = await res.json();
+
+        if (json.status === 'success') {
+          currentUser.status_memilih = 'Sudah';
+          localStorage.setItem('evoting_user', JSON.stringify(currentUser));
+          showThankYouScreen();
+        } else {
+          Swal.fire('Gagal Simpan', json.message || 'Gagal menyimpan suara.', 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error Jaringan', 'Terjadi masalah koneksi.', 'error');
+      } finally {
+        if (nextBtn) nextBtn.disabled = false;
+      }
+    }
+
+    function showThankYouScreen() {
+      showScreen('thankYouScreen');
+      document.getElementById('tyNama').innerText = currentUser.nama;
+      document.getElementById('tyTime').innerText = new Date().toLocaleString('id-ID');
+
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+    }
+
+    function showVisiMisi(nama, visiMisi) {
+      document.getElementById('modalVisiMisiTitle').innerText = `Visi & Misi - ${nama}`;
+      document.getElementById('modalVisiMisiContent').innerText = visiMisi;
+      document.getElementById('visiMisiModal').classList.remove('hidden');
+    }
+
+    function closeVisiMisiModal() {
+      document.getElementById('visiMisiModal').classList.add('hidden');
+    }
+
+    // --- ADMIN DASHBOARD LOGIC ---
+    async function loadAdminDashboard() {
+      try {
+        const res = await fetch(`${API_URL}?action=getAdminDashboard`);
+        const json = await res.json();
+
+        if (json.status === 'success') {
+          const s = json.summary;
+          document.getElementById('statTotalDPT').innerText = s.totalDPT;
+          document.getElementById('statGuruCount').innerText = s.totalGuru;
+          document.getElementById('statSiswaCount').innerText = s.totalSiswa;
+          document.getElementById('statSudahMemilih').innerText = s.sudahMemilih;
+          document.getElementById('statBelumMemilih').innerText = s.belumMemilih;
+          document.getElementById('statPersentase').innerText = `${s.persentase}% Partisipasi`;
+
+          renderAdminCharts(json.recap);
+          preparePDFData(json);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      loadDPTList();
+      loadCandidatesAndCategories();
+    }
+
+    function renderAdminCharts(recap) {
+      const container = document.getElementById('chartsContainer');
+      container.innerHTML = '';
+
+      recap.forEach(r => {
+        const card = document.createElement('div');
+        card.className = "bg-slate-50/80 p-6 rounded-2xl border border-slate-200/80 space-y-4 shadow-sm";
+        card.innerHTML = `
+          <h4 class="font-extrabold text-slate-800 text-sm uppercase tracking-wider border-b border-slate-200 pb-3 flex items-center justify-between">
+            <span>${r.nama_organisasi}</span>
+            <span class="text-xs bg-brand-100 text-brand-800 px-2.5 py-0.5 rounded-full font-mono">${r.id_kategori}</span>
+          </h4>
+          <div class="h-64">
+            <canvas id="chart_${r.id_kategori}"></canvas>
+          </div>
+        `;
+        container.appendChild(card);
+
+        setTimeout(() => {
+          const ctx = document.getElementById(`chart_${r.id_kategori}`).getContext('2d');
+          const labels = r.kandidat.map(k => `Paslon 0${k.no_urut}: ${k.nama_calon}`);
+          const data = r.kandidat.map(k => k.total_suara);
+
+          new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: [{
+                label: 'Jumlah Suara',
+                data: data,
+                backgroundColor: ['#059669', '#d97706', '#2563eb', '#7c3aed', '#ec4899'],
+                borderRadius: 10
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+            }
+          });
+        }, 100);
+      });
+    }
+
+    function switchAdminTab(tabName) {
+      ['Hasil', 'DPT', 'Paslon', 'Kategori'].forEach(t => {
+        document.getElementById(`adminTab${t}`).classList.add('hidden');
+        document.getElementById(`tabBtn${t}`).className = "px-6 py-4 text-xs font-bold text-slate-500 border-b-2 border-transparent hover:text-slate-800 whitespace-nowrap transition-all";
+      });
+
+      const activeBtn = document.getElementById(`tabBtn${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
+      activeBtn.className = "px-6 py-4 text-xs font-extrabold border-b-2 border-brand-700 text-brand-700 whitespace-nowrap transition-all";
+      document.getElementById(`adminTab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.remove('hidden');
+    }
+
+    // DPT MANAGEMENT
+    async function loadDPTList() {
+      try {
+        const res = await fetch(`${API_URL}?action=getDPTList`);
+        const json = await res.json();
+        if (json.status === 'success') {
+          dptList = json.dpt;
+          renderDPTTable(dptList);
+        }
+      } catch (err) {}
+    }
+
+    function renderDPTTable(list) {
+      const tbody = document.getElementById('dptTableBody');
+      tbody.innerHTML = '';
+
+      list.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/80 transition-colors";
+        tr.innerHTML = `
+          <td class="px-5 py-3.5 font-mono text-slate-400">${idx + 1}</td>
+          <td class="px-5 py-3.5 font-bold text-slate-800 font-mono">${item.username}</td>
+          <td class="px-5 py-3.5 font-semibold text-slate-700">${item.nama}</td>
+          <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${item.role === 'guru' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">${item.role}</span></td>
+          <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold ${item.status_memilih === 'Sudah' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}">${item.status_memilih}</span></td>
+          <td class="px-5 py-3.5 text-center">
+            <button id="btnDelDpt_${item.username}" onclick="deleteDPT('${item.username}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterDPTTable() {
+      const query = document.getElementById('searchDPTInput').value.toLowerCase();
+      const role = document.getElementById('filterRoleDPT').value;
+      const status = document.getElementById('filterStatusDPT').value;
+
+      const filtered = dptList.filter(item => {
+        const matchQuery = item.nama.toLowerCase().includes(query) || String(item.username).toLowerCase().includes(query);
+        const matchRole = role === 'all' || item.role === role;
+        const matchStatus = status === 'all' || item.status_memilih === status;
+        return matchQuery && matchRole && matchStatus;
+      });
+
+      renderDPTTable(filtered);
+    }
+
+    async function openModalAddDPT() {
+      const { value: formValues } = await Swal.fire({
+        title: '<div class="text-xl font-black text-slate-800 flex items-center justify-center gap-2"><i class="fa-solid fa-user-plus text-brand-600"></i> Tambah DPT Pemilih Baru</div>',
+        html: `
+          <div class="space-y-4 text-left mt-4">
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-id-badge text-brand-600"></i> Username / NIS / NIP</label>
+              <input id="swal-username" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="Contoh: 12345678">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-signature text-brand-600"></i> Nama Lengkap</label>
+              <input id="swal-nama" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="Nama Lengkap Pemilih">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-key text-brand-600"></i> Password</label>
+              <input id="swal-password" type="password" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="Password Akses">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-user-shield text-brand-600"></i> Role Pemilih</label>
+              <select id="swal-role" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm cursor-pointer">
+                <option value="siswa">Siswa</option>
+                <option value="guru">Guru</option>
+              </select>
+            </div>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-floppy-disk me-1.5"></i> Simpan DPT',
+        cancelButtonText: 'Batal',
+        customClass: {
+          popup: 'rounded-3xl p-6 glass-panel border border-white/80 shadow-glow-card',
+          confirmButton: 'bg-gradient-to-r from-brand-700 to-emerald-600 text-white px-5 py-3 rounded-xl font-bold text-xs shadow-md hover:from-brand-800 hover:to-emerald-700 transition-all me-2',
+          cancelButton: 'bg-slate-200 text-slate-700 px-5 py-3 rounded-xl font-bold text-xs hover:bg-slate-300 transition-all'
+        },
+        buttonsStyling: false,
+        preConfirm: () => {
+          return {
+            username: document.getElementById('swal-username').value,
+            nama: document.getElementById('swal-nama').value,
+            password: document.getElementById('swal-password').value,
+            role: document.getElementById('swal-role').value
+          }
+        }
+      });
+
+      if (formValues) {
+        if (!formValues.username || !formValues.nama || !formValues.password) return Swal.fire('Error', 'Semua kolom wajib diisi!', 'error');
+        
+        Swal.fire({
+          title: 'Menyimpan DPT...',
+          text: 'Mohon tunggu sebentar...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'addDPT', data: formValues })
+          });
+          const json = await res.json();
+          if (json.status === 'success') {
+            Swal.fire('Berhasil', 'DPT Berhasil Ditambahkan', 'success');
+            loadAdminDashboard();
+          }
+        } catch (e) {
+          Swal.fire('Error', 'Gagal menambahkan DPT', 'error');
+        }
+      }
+    }
+
+    async function deleteDPT(username) {
+      if (confirm(`Hapus akun DPT ${username}?`)) {
+        const btn = document.getElementById(`btnDelDpt_${username}`);
+        if (btn) btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-xs"></i>`;
+
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'deleteDPT', username })
+          });
+          const json = await res.json();
+          if (json.status === 'success') {
+            Swal.fire('Berhasil', 'DPT Berhasil Dihapus', 'success');
+            loadAdminDashboard();
+          }
+        } catch (e) {
+          Swal.fire('Error', 'Gagal menghapus DPT', 'error');
+        }
+      }
+    }
+
+    // CANDIDATE & CATEGORY MANAGEMENT
+    async function loadCandidatesAndCategories() {
+      try {
+        const res = await fetch(`${API_URL}?action=getInitialData`);
+        const json = await res.json();
+        if (json.status === 'success') {
+          categories = json.categories;
+          candidates = json.candidates;
+          renderAdminCategories(json.categories);
+          renderAdminCandidates(json.candidates);
+        }
+      } catch (e) {}
+    }
+
+    function renderAdminCategories(cats) {
+      const container = document.getElementById('adminCategoryList');
+      container.innerHTML = '';
+      cats.forEach(c => {
+        const div = document.createElement('div');
+        div.className = "flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-sm";
+        div.innerHTML = `
+          <div>
+            <p class="font-bold text-sm text-slate-800">${c.nama_organisasi}</p>
+            <span class="text-xs text-brand-600 font-mono font-bold">${c.id_kategori}</span>
+          </div>
+          <button id="btnDelCat_${c.id_kategori}" onclick="deleteCategory('${c.id_kategori}')" class="text-red-500 hover:text-red-700 text-xs font-bold px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 transition-colors flex items-center gap-1.5"><i class="fa-solid fa-trash"></i> Hapus</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderAdminCandidates(cands) {
+      const container = document.getElementById('adminCandidatesList');
+      container.innerHTML = '';
+      cands.forEach(c => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-xs";
+        card.innerHTML = `
+          <div class="flex items-center gap-3.5">
+            <img src="${c.foto_url}" class="w-16 h-16 rounded-xl object-cover border border-slate-200 shadow-inner">
+            <div class="space-y-0.5">
+              <span class="bg-brand-100 text-brand-800 font-extrabold text-[10px] px-2 py-0.5 rounded-md">No 0${c.no_urut}</span>
+              <p class="font-extrabold text-slate-800 text-sm leading-snug">${c.nama_calon}</p>
+              <p class="text-slate-400 font-mono font-bold text-[11px]">${c.id_kategori}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+            <button onclick="openModalEditCandidate('${c.id_kandidat}')" class="w-full bg-amber-50 hover:bg-amber-100 text-amber-700 py-2.5 rounded-xl font-bold text-[11px] transition-colors flex items-center justify-center gap-1.5 border border-amber-200/60">
+              <i class="fa-solid fa-pen-to-square"></i> Edit
+            </button>
+            <button id="btnDelCand_${c.id_kandidat}" onclick="deleteCandidate('${c.id_kandidat}')" class="w-full bg-red-50 hover:bg-red-100 text-red-600 py-2.5 rounded-xl font-bold text-[11px] transition-colors flex items-center justify-center gap-1.5 border border-red-200/60">
+              <i class="fa-solid fa-trash"></i> Hapus
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    async function openModalCategory() {
+      const { value: nama } = await Swal.fire({
+        title: '<div class="text-xl font-black text-slate-800 flex items-center justify-center gap-2"><i class="fa-solid fa-sitemap text-brand-600"></i> Tambah Kategori Organisasi</div>',
+        html: `
+          <div class="text-left mt-4">
+            <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-building text-brand-600"></i> Nama Organisasi</label>
+            <input id="swal-cat-nama" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="Contoh: OSIS, IPNU, IPPNU">
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-floppy-disk me-1.5"></i> Simpan Organisasi',
+        cancelButtonText: 'Batal',
+        customClass: {
+          popup: 'rounded-3xl p-6 glass-panel border border-white/80 shadow-glow-card',
+          confirmButton: 'bg-gradient-to-r from-brand-700 to-emerald-600 text-white px-5 py-3 rounded-xl font-bold text-xs shadow-md hover:from-brand-800 hover:to-emerald-700 transition-all me-2',
+          cancelButton: 'bg-slate-200 text-slate-700 px-5 py-3 rounded-xl font-bold text-xs hover:bg-slate-300 transition-all'
+        },
+        buttonsStyling: false,
+        preConfirm: () => document.getElementById('swal-cat-nama').value
+      });
+
+      if (nama) {
+        Swal.fire({
+          title: 'Menyimpan Kategori...',
+          text: 'Mohon tunggu sebentar...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'saveCategory', data: { id_kategori: '', nama_organisasi: nama, status_aktif: 'aktif' } })
+        });
+        Swal.fire('Berhasil', 'Kategori Berhasil Ditambahkan', 'success');
+        loadCandidatesAndCategories();
+      }
+    }
+
+    // --- FITUR UPLOAD KANDIDAT / UPLOAD PASLON (ULTRA MODERN FORM) ---
+    async function openModalCandidate() {
+      const { value: formValues } = await Swal.fire({
+        title: '<div class="text-xl font-black text-slate-800 flex items-center justify-center gap-2"><i class="fa-solid fa-user-plus text-brand-600"></i> Tambah Paslon Baru</div>',
+        html: `
+          <div class="space-y-4 text-left mt-4">
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-brand-600"></i> ID Kategori Organisasi</label>
+              <input id="c-kat" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="Contoh: KAT-001">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-list-ol text-brand-600"></i> Nomor Urut Paslon</label>
+              <input id="c-nourut" type="number" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="Contoh: 1">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-user-tie text-brand-600"></i> Nama Paslon</label>
+              <input id="c-nama" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="Nama Lengkap Paslon">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-image text-brand-600"></i> Link Foto Paslon (URL)</label>
+              <input id="c-foto" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="https://link-gambar.com/foto.jpg">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-bullhorn text-brand-600"></i> Visi & Misi Paslon</label>
+              <textarea id="c-visi" rows="3" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm resize-none" placeholder="Tuliskan Visi & Misi secara detail..."></textarea>
+            </div>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-cloud-arrow-up me-1.5"></i> Upload Paslon',
+        cancelButtonText: 'Batal',
+        customClass: {
+          popup: 'rounded-3xl p-6 glass-panel border border-white/80 shadow-glow-card',
+          confirmButton: 'bg-gradient-to-r from-brand-700 to-emerald-600 text-white px-5 py-3 rounded-xl font-bold text-xs shadow-md hover:from-brand-800 hover:to-emerald-700 transition-all me-2',
+          cancelButton: 'bg-slate-200 text-slate-700 px-5 py-3 rounded-xl font-bold text-xs hover:bg-slate-300 transition-all'
+        },
+        buttonsStyling: false,
+        preConfirm: () => {
+          return {
+            id_kandidat: '',
+            id_kategori: document.getElementById('c-kat').value,
+            no_urut: document.getElementById('c-nourut').value,
+            nama_calon: document.getElementById('c-nama').value,
+            foto_url: document.getElementById('c-foto').value,
+            visi_misi: document.getElementById('c-visi').value
+          }
+        }
+      });
+
+      if (formValues) {
+        if (!formValues.id_kategori || !formValues.nama_calon) return Swal.fire('Error', 'ID Kategori & Nama Paslon wajib diisi!', 'error');
+
+        Swal.fire({
+          title: 'Mengunggah Paslon...',
+          text: 'Mohon tunggu sebentar...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'saveCandidate', data: formValues })
+          });
+          const json = await res.json();
+          if (json.status === 'success') {
+            Swal.fire('Berhasil', 'Paslon Berhasil Ditambahkan', 'success');
+            loadCandidatesAndCategories();
+          }
+        } catch (e) {
+          Swal.fire('Error', 'Gagal menambahkan paslon', 'error');
+        }
+      }
+    }
+
+    // --- FITUR EDIT KANDIDAT / PASLON ---
+    async function openModalEditCandidate(idKandidat) {
+      const candidate = candidates.find(item => item.id_kandidat === idKandidat);
+      if (!candidate) return Swal.fire('Error', 'Data Paslon tidak ditemukan!', 'error');
+
+      const { value: formValues } = await Swal.fire({
+        title: '<div class="text-xl font-black text-slate-800 flex items-center justify-center gap-2"><i class="fa-solid fa-pen-to-square text-amber-600"></i> Edit Data Paslon</div>',
+        html: `
+          <div class="space-y-4 text-left mt-4">
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-amber-600"></i> ID Kategori Organisasi</label>
+              <input id="swal-edit-kat" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 outline-none transition-all shadow-sm" value="${candidate.id_kategori}" placeholder="Contoh: KAT-001">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-list-ol text-amber-600"></i> Nomor Urut Paslon</label>
+              <input id="swal-edit-nourut" type="number" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 outline-none transition-all shadow-sm" value="${candidate.no_urut}" placeholder="Contoh: 1">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-user-tie text-amber-600"></i> Nama Paslon</label>
+              <input id="swal-edit-nama" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 outline-none transition-all shadow-sm" value="${candidate.nama_calon}" placeholder="Nama Lengkap Paslon">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-image text-amber-600"></i> Link Foto Paslon (URL)</label>
+              <input id="swal-edit-foto" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 outline-none transition-all shadow-sm" value="${candidate.foto_url}" placeholder="https://link-gambar.com/foto.jpg">
+            </div>
+            <div>
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-bullhorn text-amber-600"></i> Visi & Misi Paslon</label>
+              <textarea id="swal-edit-visi" rows="3" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-amber-500 focus:ring-4 focus:ring-amber-500/15 outline-none transition-all shadow-sm resize-none" placeholder="Tuliskan Visi & Misi...">${candidate.visi_misi}</textarea>
+            </div>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fa-solid fa-floppy-disk me-1.5"></i> Simpan Perubahan',
+        cancelButtonText: 'Batal',
+        customClass: {
+          popup: 'rounded-3xl p-6 glass-panel border border-white/80 shadow-glow-card',
+          confirmButton: 'bg-gradient-to-r from-amber-600 to-amber-500 text-white px-5 py-3 rounded-xl font-bold text-xs shadow-md hover:from-amber-700 hover:to-amber-600 transition-all me-2',
+          cancelButton: 'bg-slate-200 text-slate-700 px-5 py-3 rounded-xl font-bold text-xs hover:bg-slate-300 transition-all'
+        },
+        buttonsStyling: false,
+        preConfirm: () => {
+          return {
+            id_kandidat: candidate.id_kandidat,
+            id_kategori: document.getElementById('swal-edit-kat').value,
+            no_urut: document.getElementById('swal-edit-nourut').value,
+            nama_calon: document.getElementById('swal-edit-nama').value,
+            foto_url: document.getElementById('swal-edit-foto').value,
+            visi_misi: document.getElementById('swal-edit-visi').value
+          }
+        }
+      });
+
+      if (formValues) {
+        Swal.fire({
+          title: 'Memperbarui Paslon...',
+          text: 'Mohon tunggu sebentar...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'saveCandidate', data: formValues })
+          });
+          const json = await res.json();
+          if (json.status === 'success') {
+            Swal.fire('Berhasil', 'Data Paslon Berhasil Diperbarui!', 'success');
+            loadCandidatesAndCategories();
+          } else {
+            Swal.fire('Gagal', json.message || 'Gagal menyimpan perubahan.', 'error');
+          }
+        } catch (e) {
+          Swal.fire('Error', 'Gagal memperbarui paslon.', 'error');
+        }
+      }
+    }
+
+    async function deleteCategory(id) {
+      if (confirm('Hapus kategori ini?')) {
+        const btn = document.getElementById(`btnDelCat_${id}`);
+        if (btn) btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Hapus...`;
+
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCategory', id_kategori: id }) });
+        loadCandidatesAndCategories();
+      }
+    }
+
+    async function deleteCandidate(id) {
+      if (confirm('Hapus kandidat ini?')) {
+        const btn = document.getElementById(`btnDelCand_${id}`);
+        if (btn) btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Hapus...`;
+
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'deleteCandidate', id_kandidat: id }) });
+        loadCandidatesAndCategories();
+      }
+    }
+
+    // --- PDF EXPORT LOGIC ---
+    function preparePDFData(data) {
+      document.getElementById('pdfDate').innerText = new Date().toLocaleDateString('id-ID', { dateStyle: 'full' });
+      document.getElementById('pdfTotalDPT').innerText = data.summary.totalDPT;
+      document.getElementById('pdfTotalGuru').innerText = data.summary.totalGuru;
+      document.getElementById('pdfTotalSiswa').innerText = data.summary.totalSiswa;
+      document.getElementById('pdfSudahMemilih').innerText = `${data.summary.sudahMemilih} Suara (${data.summary.persentase}%)`;
+      document.getElementById('pdfBelumMemilih').innerText = `${data.summary.belumMemilih} Suara`;
+
+      const container = document.getElementById('pdfPerolehanSuara');
+      container.innerHTML = '';
+
+      data.recap.forEach(r => {
+        const div = document.createElement('div');
+        div.className = "space-y-1";
+        let tableRows = r.kandidat.map(k => `
+          <tr>
+            <td class="border border-slate-300 p-2 font-mono">0${k.no_urut}</td>
+            <td class="border border-slate-300 p-2 font-medium">${k.nama_calon}</td>
+            <td class="border border-slate-300 p-2 font-bold text-center">${k.total_suara} Suara</td>
+          </tr>
+        `).join('');
+
+        div.innerHTML = `
+          <h5 class="font-bold text-xs uppercase text-slate-700">${r.nama_organisasi}</h5>
+          <table class="w-full text-xs border-collapse border border-slate-300">
+            <thead class="bg-slate-100">
+              <tr><th class="border border-slate-300 p-1.5 w-12">No</th><th class="border border-slate-300 p-1.5 text-left">Nama Paslon</th><th class="border border-slate-300 p-1.5 w-24">Total Suara</th></tr>
+            </thead>
+            <tbody>${tableRows}</tbody>
+          </table>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function exportRekapPDF() {
+      const btn = document.getElementById('btnExportPDF');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> <span>Menerbitkan PDF...</span>`;
+      }
+
+      const element = document.getElementById('pdfReportTemplate');
+      const opt = {
+        margin:       0.5,
+        filename:     `Rekap_PEMIRA_MA_Nahdlatul_Arifin_${new Date().toISOString().slice(0,10)}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      element.parentElement.classList.remove('hidden');
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.parentElement.classList.add('hidden');
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-file-pdf text-red-400"></i> <span>Download PDF</span>`;
+        }
+      });
+    }
+  </script>
+</body>
+</html>
