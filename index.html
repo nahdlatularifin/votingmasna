@@ -139,7 +139,7 @@
       color: #059669;
     }
 
-    /* --- REVISI 1: ULTRA MODERN PROFESSIONAL SWEETALERT NOTIFICATIONS --- */
+    /* ULTRA MODERN PROFESSIONAL SWEETALERT NOTIFICATIONS */
     .swal2-popup {
       background: rgba(255, 255, 255, 0.96) !important;
       backdrop-filter: blur(24px) !important;
@@ -731,7 +731,6 @@
       }
     }
 
-    /* --- REVISI 2: SKALA FOTO 3:4 DENGAN DISPLAY UTUH TANPA TERPOTONG --- */
     function renderCategoryStep() {
       if (categories.length === 0) return;
       const cat = categories[currentCategoryIndex];
@@ -768,7 +767,6 @@
               ${isSelected ? '<span class="bg-emerald-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm"><i class="fa-solid fa-check"></i> Dipilih</span>' : ''}
             </div>
             
-            <!-- CONTAINER FOTO DENGAN RASIO PRESISI 3:4 & TAMPILAN FULL UNTUK FOTO ASLI TANPA TERPOTONG -->
             <div class="overflow-hidden rounded-2xl mb-4 bg-slate-900/5 aspect-[3/4] w-full flex items-center justify-center shadow-inner group relative border border-slate-200/50">
               <img src="${c.foto_url}" alt="${c.nama_calon}" class="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-500">
             </div>
@@ -776,7 +774,7 @@
             <h3 class="font-extrabold text-slate-800 text-lg leading-snug tracking-tight">${c.nama_calon}</h3>
           </div>
           <div class="mt-5 space-y-2.5">
-            <button onclick="showVisiMisi('${c.nama_calon.replace(/'/g, "\\'")}', '${c.visi_misi.replace(/'/g, "\\'")}')" class="w-full text-xs text-brand-700 font-bold py-2.5 bg-brand-50 hover:bg-brand-100/80 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 border border-brand-200/60">
+            <button onclick="showVisiMisi('${c.id_kandidat}')" class="w-full text-xs text-brand-700 font-bold py-2.5 bg-brand-50 hover:bg-brand-100/80 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 border border-brand-200/60">
               <i class="fa-solid fa-eye"></i> Lihat Visi & Misi
             </button>
             <button onclick="selectCandidate('${cat.id_kategori}', '${c.id_kandidat}')" class="w-full py-3.5 rounded-xl font-extrabold text-sm transition-all duration-200 shadow-md flex items-center justify-center gap-2 ${isSelected ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-emerald-600/30' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 active:scale-95'}">
@@ -836,6 +834,7 @@
       }
     }
 
+    // --- REVISI POIN 2: MENUTUP POPUP LOADING SETELAH BERHASIL MENGIRIM SUARA ---
     async function submitAllVotes() {
       const votesArray = Object.keys(userVotes).map(catId => ({
         id_kategori: catId,
@@ -866,6 +865,9 @@
         });
         const json = await res.json();
 
+        // Tutup indikator loading SweetAlert
+        Swal.close();
+
         if (json.status === 'success') {
           currentUser.status_memilih = 'Sudah';
           localStorage.setItem('evoting_user', JSON.stringify(currentUser));
@@ -874,6 +876,7 @@
           Swal.fire('Gagal Simpan', json.message || 'Gagal menyimpan suara.', 'error');
         }
       } catch (err) {
+        Swal.close();
         Swal.fire('Error Jaringan', 'Terjadi masalah koneksi.', 'error');
       } finally {
         if (nextBtn) nextBtn.disabled = false;
@@ -892,9 +895,16 @@
       });
     }
 
-    function showVisiMisi(nama, visiMisi) {
-      document.getElementById('modalVisiMisiTitle').innerText = `Visi & Misi - ${nama}`;
-      document.getElementById('modalVisiMisiContent').innerText = visiMisi;
+    function showVisiMisi(idKandidatOrNama, visiMisi) {
+      if (visiMisi !== undefined) {
+        document.getElementById('modalVisiMisiTitle').innerText = `Visi & Misi - ${idKandidatOrNama}`;
+        document.getElementById('modalVisiMisiContent').innerText = visiMisi;
+      } else {
+        const c = candidates.find(item => item.id_kandidat === idKandidatOrNama);
+        if (!c) return;
+        document.getElementById('modalVisiMisiTitle').innerText = `Visi & Misi - ${c.nama_calon}`;
+        document.getElementById('modalVisiMisiContent').innerText = c.visi_misi;
+      }
       document.getElementById('visiMisiModal').classList.remove('hidden');
     }
 
@@ -983,33 +993,45 @@
       document.getElementById(`adminTab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`).classList.remove('hidden');
     }
 
-    // DPT MANAGEMENT
+    // --- REVISI POIN 1: DPT MANAGEMENT (PERBAIKAN LOAD TABEL, STATUS MEMILIH, FITUR PENCARIAN, & FITUR RESET USER VOTER) ---
     async function loadDPTList() {
       try {
         const res = await fetch(`${API_URL}?action=getDPTList`);
         const json = await res.json();
         if (json.status === 'success') {
-          dptList = json.dpt;
-          renderDPTTable(dptList);
+          dptList = json.dpt || [];
+          filterDPTTable();
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error(err);
+      }
     }
 
     function renderDPTTable(list) {
       const tbody = document.getElementById('dptTableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-5 py-6 text-center text-slate-400 font-semibold">Tidak ada data DPT ditemukan</td></tr>`;
+        return;
+      }
 
       list.forEach((item, idx) => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50/80 transition-colors";
+        const statusStr = item.status_memilih || 'Belum';
+        const isSudah = statusStr.toLowerCase() === 'sudah';
+
         tr.innerHTML = `
           <td class="px-5 py-3.5 font-mono text-slate-400">${idx + 1}</td>
-          <td class="px-5 py-3.5 font-bold text-slate-800 font-mono">${item.username}</td>
-          <td class="px-5 py-3.5 font-semibold text-slate-700">${item.nama}</td>
-          <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${item.role === 'guru' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">${item.role}</span></td>
-          <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold ${item.status_memilih === 'Sudah' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}">${item.status_memilih}</span></td>
-          <td class="px-5 py-3.5 text-center">
-            <button id="btnDelDpt_${item.username}" onclick="deleteDPT('${item.username}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors"><i class="fa-solid fa-trash text-xs"></i></button>
+          <td class="px-5 py-3.5 font-bold text-slate-800 font-mono">${item.username || ''}</td>
+          <td class="px-5 py-3.5 font-semibold text-slate-700">${item.nama || ''}</td>
+          <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${item.role === 'guru' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}">${item.role || 'siswa'}</span></td>
+          <td class="px-5 py-3.5"><span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold ${isSudah ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-100 text-amber-700 border border-amber-200'}">${isSudah ? 'Sudah Memilih' : 'Belum Memilih'}</span></td>
+          <td class="px-5 py-3.5 text-center flex items-center justify-center gap-1.5">
+            <button id="btnResetDpt_${item.username}" title="Reset Status Vote User" onclick="resetUserVote('${item.username}')" class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white transition-colors flex items-center justify-center"><i class="fa-solid fa-rotate-left text-xs"></i></button>
+            <button id="btnDelDpt_${item.username}" title="Hapus DPT" onclick="deleteDPT('${item.username}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i class="fa-solid fa-trash text-xs"></i></button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1017,18 +1039,69 @@
     }
 
     function filterDPTTable() {
-      const query = document.getElementById('searchDPTInput').value.toLowerCase();
-      const role = document.getElementById('filterRoleDPT').value;
-      const status = document.getElementById('filterStatusDPT').value;
+      const query = (document.getElementById('searchDPTInput')?.value || '').toLowerCase().trim();
+      const role = document.getElementById('filterRoleDPT')?.value || 'all';
+      const status = document.getElementById('filterStatusDPT')?.value || 'all';
 
       const filtered = dptList.filter(item => {
-        const matchQuery = item.nama.toLowerCase().includes(query) || String(item.username).toLowerCase().includes(query);
-        const matchRole = role === 'all' || item.role === role;
-        const matchStatus = status === 'all' || item.status_memilih === status;
+        const usernameStr = String(item.username || '').toLowerCase();
+        const namaStr = String(item.nama || '').toLowerCase();
+        const matchQuery = !query || namaStr.includes(query) || usernameStr.includes(query);
+        const matchRole = role === 'all' || (item.role || '').toLowerCase() === role.toLowerCase();
+        const itemStatus = (item.status_memilih || 'Belum').toLowerCase();
+        const matchStatus = status === 'all' || (status === 'Sudah' && itemStatus === 'sudah') || (status === 'Belum' && itemStatus !== 'sudah');
         return matchQuery && matchRole && matchStatus;
       });
 
       renderDPTTable(filtered);
+    }
+
+    async function resetUserVote(username) {
+      if (!username) return;
+      
+      const result = await Swal.fire({
+        title: 'Reset User Pemilih?',
+        text: `Apakah Anda yakin ingin mereset status memilih dan menghapus data votes yang telah tercatat dari user "${username}"?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d97706',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fa-solid fa-rotate-left me-1"></i> Ya, Reset Vote!',
+        cancelButtonText: 'Batal'
+      });
+
+      if (result.isConfirmed) {
+        const btn = document.getElementById(`btnResetDpt_${username}`);
+        if (btn) btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-xs"></i>`;
+
+        Swal.fire({
+          title: 'Mereset Data Vote...',
+          text: 'Mohon tunggu sebentar...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        try {
+          const res = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'resetUserVote', username })
+          });
+          const json = await res.json();
+          Swal.close();
+
+          if (json.status === 'success') {
+            Swal.fire('Berhasil', 'Status user & data votes berhasil direset!', 'success');
+            loadAdminDashboard();
+          } else {
+            Swal.fire('Gagal', json.message || 'Gagal mereset vote user.', 'error');
+          }
+        } catch (e) {
+          Swal.close();
+          Swal.fire('Error', 'Gagal terhubung ke server.', 'error');
+        } finally {
+          if (btn) btn.innerHTML = `<i class="fa-solid fa-rotate-left text-xs"></i>`;
+        }
+      }
     }
 
     async function openModalAddDPT() {
@@ -1222,7 +1295,6 @@
       }
     }
 
-    // --- FITUR UPLOAD KANDIDAT / UPLOAD PASLON (ULTRA MODERN FORM) ---
     async function openModalCandidate() {
       const categoryOptions = categories.length > 0
         ? categories.map(c => `<option value="${c.id_kategori}">${c.nama_organisasi} (${c.id_kategori})</option>`).join('')
@@ -1305,7 +1377,6 @@
       }
     }
 
-    // --- FITUR EDIT KANDIDAT / PASLON ---
     async function openModalEditCandidate(idKandidat) {
       const candidate = candidates.find(item => item.id_kandidat === idKandidat);
       if (!candidate) return Swal.fire('Error', 'Data Paslon tidak ditemukan!', 'error');
