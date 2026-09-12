@@ -138,6 +138,76 @@
     .form-group-modern:focus-within label {
       color: #059669;
     }
+
+    /* --- REVISI 1: ULTRA MODERN PROFESSIONAL SWEETALERT NOTIFICATIONS --- */
+    .swal2-popup {
+      background: rgba(255, 255, 255, 0.96) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.8) !important;
+      border-radius: 1.75rem !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3) !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      padding: 2.25rem 1.75rem !important;
+    }
+    .swal2-title {
+      font-weight: 800 !important;
+      font-size: 1.35rem !important;
+      color: #0f172a !important;
+      letter-spacing: -0.02em !important;
+    }
+    .swal2-html-container {
+      font-size: 0.875rem !important;
+      color: #475569 !important;
+      font-weight: 500 !important;
+      line-height: 1.6 !important;
+    }
+    .swal2-confirm {
+      background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+      border-radius: 0.875rem !important;
+      font-weight: 800 !important;
+      font-size: 0.8125rem !important;
+      padding: 0.85rem 1.75rem !important;
+      box-shadow: 0 10px 20px -5px rgba(5, 150, 105, 0.4) !important;
+      transition: all 0.2s ease !important;
+    }
+    .swal2-confirm:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: 0 14px 24px -5px rgba(5, 150, 105, 0.5) !important;
+    }
+    .swal2-cancel {
+      background: #f1f5f9 !important;
+      color: #475569 !important;
+      border-radius: 0.875rem !important;
+      font-weight: 700 !important;
+      font-size: 0.8125rem !important;
+      padding: 0.85rem 1.5rem !important;
+      transition: all 0.2s ease !important;
+      border: 1px solid #cbd5e1 !important;
+    }
+    .swal2-cancel:hover {
+      background: #e2e8f0 !important;
+      color: #1e293b !important;
+    }
+    .swal2-icon {
+      border-width: 3px !important;
+      margin: 0.5rem auto 1.25rem auto !important;
+    }
+    .swal2-icon.swal2-success {
+      border-color: #10b981 !important;
+      color: #10b981 !important;
+    }
+    .swal2-icon.swal2-success [class^='swal2-success-line'] {
+      background-color: #10b981 !important;
+    }
+    .swal2-icon.swal2-error {
+      border-color: #ef4444 !important;
+      color: #ef4444 !important;
+    }
+    .swal2-icon.swal2-warning {
+      border-color: #f59e0b !important;
+      color: #f59e0b !important;
+    }
   </style>
 </head>
 <body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between selection:bg-brand-500 selection:text-white relative">
@@ -661,6 +731,7 @@
       }
     }
 
+    /* --- REVISI 2: SKALA FOTO 3:4 DENGAN DISPLAY UTUH TANPA TERPOTONG --- */
     function renderCategoryStep() {
       if (categories.length === 0) return;
       const cat = categories[currentCategoryIndex];
@@ -696,9 +767,12 @@
               </span>
               ${isSelected ? '<span class="bg-emerald-500 text-white text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm"><i class="fa-solid fa-check"></i> Dipilih</span>' : ''}
             </div>
-            <div class="overflow-hidden rounded-2xl mb-4 bg-slate-100 shadow-inner group">
-              <img src="${c.foto_url}" alt="${c.nama_calon}" class="w-full h-64 object-cover object-top group-hover:scale-105 transition-transform duration-500">
+            
+            <!-- CONTAINER FOTO DENGAN RASIO PRESISI 3:4 & TAMPILAN FULL UNTUK FOTO ASLI TANPA TERPOTONG -->
+            <div class="overflow-hidden rounded-2xl mb-4 bg-slate-900/5 aspect-[3/4] w-full flex items-center justify-center shadow-inner group relative border border-slate-200/50">
+              <img src="${c.foto_url}" alt="${c.nama_calon}" class="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform duration-500">
             </div>
+
             <h3 class="font-extrabold text-slate-800 text-lg leading-snug tracking-tight">${c.nama_calon}</h3>
           </div>
           <div class="mt-5 space-y-2.5">
@@ -1089,7 +1163,7 @@
         card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 text-xs";
         card.innerHTML = `
           <div class="flex items-center gap-3.5">
-            <img src="${c.foto_url}" class="w-16 h-16 rounded-xl object-cover border border-slate-200 shadow-inner">
+            <img src="${c.foto_url}" class="w-16 h-20 rounded-xl object-contain bg-slate-50 border border-slate-200 shadow-inner">
             <div class="space-y-0.5">
               <span class="bg-brand-100 text-brand-800 font-extrabold text-[10px] px-2 py-0.5 rounded-md">No 0${c.no_urut}</span>
               <p class="font-extrabold text-slate-800 text-sm leading-snug">${c.nama_calon}</p>
@@ -1150,13 +1224,20 @@
 
     // --- FITUR UPLOAD KANDIDAT / UPLOAD PASLON (ULTRA MODERN FORM) ---
     async function openModalCandidate() {
+      const categoryOptions = categories.length > 0
+        ? categories.map(c => `<option value="${c.id_kategori}">${c.nama_organisasi} (${c.id_kategori})</option>`).join('')
+        : '<option value="">-- Belum ada kategori tersedia --</option>';
+
       const { value: formValues } = await Swal.fire({
         title: '<div class="text-xl font-black text-slate-800 flex items-center justify-center gap-2"><i class="fa-solid fa-user-plus text-brand-600"></i> Tambah Paslon Baru</div>',
         html: `
           <div class="space-y-4 text-left mt-4">
             <div>
-              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-brand-600"></i> ID Kategori Organisasi</label>
-              <input id="c-kat" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm" placeholder="Contoh: KAT-001">
+              <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-layer-group text-brand-600"></i> Kategori Organisasi</label>
+              <select id="c-kat" class="w-full px-4 py-3.5 text-xs font-semibold rounded-2xl border border-slate-200 bg-slate-50/80 focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 outline-none transition-all shadow-sm cursor-pointer">
+                <option value="">-- Pilih Kategori Organisasi --</option>
+                ${categoryOptions}
+              </select>
             </div>
             <div>
               <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5 flex items-center gap-1.5"><i class="fa-solid fa-list-ol text-brand-600"></i> Nomor Urut Paslon</label>
